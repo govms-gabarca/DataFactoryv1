@@ -61,8 +61,8 @@
 					"method": "GET",
 					"authentication": {
 						"type": "ServicePrincipal",
-						"userTenant": "38808b06-4f1a-4617-a154-d8dae8571b17",
-						"username": "8d02428a-3c6e-4563-9314-3f1cb90b2d15",
+						"userTenant": "5a4c51fd-c59d-493e-8aec-8f6300364946",
+						"username": "acdd70b8-1d65-4e11-b26f-adbb4847427a",
 						"resource": "https://analysis.windows.net/powerbi/api",
 						"password": {
 							"type": "AzureKeyVaultSecret",
@@ -70,7 +70,7 @@
 								"referenceName": "AzureKeyVault1",
 								"type": "LinkedServiceReference"
 							},
-							"secretName": "secret-app-governance"
+							"secretName": "apirest"
 						}
 					}
 				}
@@ -133,8 +133,8 @@
 								"method": "GET",
 								"authentication": {
 									"type": "ServicePrincipal",
-									"userTenant": "38808b06-4f1a-4617-a154-d8dae8571b17",
-									"username": "8d02428a-3c6e-4563-9314-3f1cb90b2d15",
+									"userTenant": "5a4c51fd-c59d-493e-8aec-8f6300364946",
+									"username": "acdd70b8-1d65-4e11-b26f-adbb4847427a",
 									"resource": {
 										"value": "https://analysis.windows.net/powerbi/api",
 										"type": "Expression"
@@ -145,7 +145,7 @@
 											"referenceName": "AzureKeyVault1",
 											"type": "LinkedServiceReference"
 										},
-										"secretName": "secret-app-governance"
+										"secretName": "apirest"
 									}
 								}
 							}

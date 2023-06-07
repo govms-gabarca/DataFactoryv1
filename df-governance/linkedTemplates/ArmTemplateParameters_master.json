@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "df-governance"
+		},
+		"Lnk_dlsawgovernance_accountKey": {
+			"value": ""
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://kv-governancepbi.vault.azure.net/"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_url": {
+			"value": "https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId": {
+			"value": "acdd70b8-1d65-4e11-b26f-adbb4847427a"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_tenant": {
+			"value": "5a4c51fd-c59d-493e-8aec-8f6300364946"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_aadResourceId": {
+			"value": "https://analysis.windows.net/powerbi/api"
+		},
+		"Lnk_Powerbi_Actividades_properties_typeProperties_url": {
+			"value": "https://api.powerbi.com/v1.0/myorg/admin/activityevents"
+		},
+		"Lnk_Powerbi_Actividades_properties_typeProperties_servicePrincipalId": {
+			"value": "acdd70b8-1d65-4e11-b26f-adbb4847427a"
+		},
+		"Lnk_Powerbi_Actividades_properties_typeProperties_tenant": {
+			"value": "5a4c51fd-c59d-493e-8aec-8f6300364946"
+		},
+		"Lnk_Powerbi_Actividades_properties_typeProperties_aadResourceId": {
+			"value": "https://analysis.windows.net/powerbi/api"
+		},
+		"Lnk_dlsawgovernance_properties_typeProperties_url": {
+			"value": "https://dlsgovernance.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

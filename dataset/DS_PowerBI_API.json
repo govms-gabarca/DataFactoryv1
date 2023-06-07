@@ -1,0 +1,24 @@
+{
+	"name": "DS_PowerBI_API",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Lnk_PowerBI_API",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Token": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat(\n'activityevents?continuationToken=',\n'''',\ndataset().Token,\n''''\n)",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

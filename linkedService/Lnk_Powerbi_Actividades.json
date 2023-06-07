@@ -1,0 +1,24 @@
+{
+	"name": "Lnk_Powerbi_Actividades",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://api.powerbi.com/v1.0/myorg/admin/activityevents",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "AadServicePrincipal",
+			"servicePrincipalId": "8d02428a-3c6e-4563-9314-3f1cb90b2d15",
+			"servicePrincipalKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault1",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "secret-app-governance"
+			},
+			"tenant": "38808b06-4f1a-4617-a154-d8dae8571b17",
+			"aadResourceId": "https://analysis.windows.net/powerbi/api"
+		}
+	}
+}

@@ -1,0 +1,266 @@
+{
+	"name": "ExtraeActividadesDiarias",
+	"properties": {
+		"activities": [
+			{
+				"name": "Delete1",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_BINARY",
+						"type": "DatasetReference",
+						"parameters": {
+							"CONTAINER": "powerbigovernance-df",
+							"DIRECTORY": {
+								"value": "@concat(\n'activityevents/',\n'Year=',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyy'),\n'/Month=',\nformatDateTime(pipeline().parameters.ParamDateStart,'MM'),\n'/Day=',\nformatDateTime(pipeline().parameters.ParamDateStart,'dd'),\n'/'\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "GetActivitiesPowerBI",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Delete1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@concat(\n'https://api.powerbi.com/v1.0/myorg/admin/activityevents?startDateTime=',\n'''',\npipeline().parameters.ParamDateStart,\n'T00:00:00.000Z',\n'''',\n'&endDateTime=',\n'''',\npipeline().parameters.ParamDateStart,\n'T23:59:59.000Z',\n'''')",
+						"type": "Expression"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "ServicePrincipal",
+						"userTenant": "38808b06-4f1a-4617-a154-d8dae8571b17",
+						"username": "8d02428a-3c6e-4563-9314-3f1cb90b2d15",
+						"resource": "https://analysis.windows.net/powerbi/api",
+						"password": {
+							"type": "AzureKeyVaultSecret",
+							"store": {
+								"referenceName": "AzureKeyVault1",
+								"type": "LinkedServiceReference"
+							},
+							"secretName": "secret-app-governance"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set tokenContinuation",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "GetActivitiesPowerBI",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "tokenContinuation",
+					"value": {
+						"value": "@activity('GetActivitiesPowerBI').output.continuationToken",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Until",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "Set tokenContinuation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@empty(variables('tokenContinuation'))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "ExtraeContinuationToken",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@concat('https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin/activityevents?continuationToken=','''',variables('tokenContinuation'),'''')",
+									"type": "Expression"
+								},
+								"method": "GET",
+								"authentication": {
+									"type": "ServicePrincipal",
+									"userTenant": "38808b06-4f1a-4617-a154-d8dae8571b17",
+									"username": "8d02428a-3c6e-4563-9314-3f1cb90b2d15",
+									"resource": {
+										"value": "https://analysis.windows.net/powerbi/api",
+										"type": "Expression"
+									},
+									"password": {
+										"type": "AzureKeyVaultSecret",
+										"store": {
+											"referenceName": "AzureKeyVault1",
+											"type": "LinkedServiceReference"
+										},
+										"secretName": "secret-app-governance"
+									}
+								}
+							}
+						},
+						{
+							"name": "Reset tokenContinuation",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "ExtraeContinuationToken",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "tokenContinuation",
+								"value": {
+									"value": "@activity('ExtraeContinuationToken').output.continuationToken",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET",
+									"paginationRules": {
+										"supportRFC5988": "true"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_PowerBI_API",
+									"type": "DatasetReference",
+									"parameters": {
+										"Token": {
+											"value": "@variables('tokenContinuation')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_JSON_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"DIRECTORY": {
+											"value": "@concat(\n'activityevents/',\n'Year=',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyy'),\n'/Month=',\nformatDateTime(pipeline().parameters.ParamDateStart,'MM'),\n'/Day=',\nformatDateTime(pipeline().parameters.ParamDateStart,'dd')\n)\n",
+											"type": "Expression"
+										},
+										"FILENAME": {
+											"value": "@concat(\n'activities_',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyyMMdd'),\nformatDateTime(utcnow(),'dd-MM-yyyy-hhmmss'),\n'.json'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"ParamDateStart": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"tokenContinuation": {
+				"type": "String"
+			},
+			"FechaInicial": {
+				"type": "String"
+			},
+			"FechaInicialdos": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-06T21:02:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

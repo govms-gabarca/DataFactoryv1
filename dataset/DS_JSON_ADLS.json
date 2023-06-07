@@ -1,0 +1,35 @@
+{
+	"name": "DS_JSON_ADLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Lnk_dlsawgovernance",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"DIRECTORY": {
+				"type": "string"
+			},
+			"FILENAME": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FILENAME",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().DIRECTORY",
+					"type": "Expression"
+				},
+				"fileSystem": "powerbigovernance-df"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,9 @@
+{
+	"name": "df-governance",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "c1203ee3-8cdb-45f6-b5ac-0fdcf3127d9f",
+		"tenantId": "5a4c51fd-c59d-493e-8aec-8f6300364946"
+	}
+}

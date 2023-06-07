@@ -1,11 +1,11 @@
 {
 	"name": "AzureKeyVault1",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureKeyVault",
 		"typeProperties": {
-			"baseUrl": "https://kv-saw-governance.vault.azure.net/"
+			"baseUrl": "https://kv-governancepbi.vault.azure.net/"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }

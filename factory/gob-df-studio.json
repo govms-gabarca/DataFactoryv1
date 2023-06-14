@@ -1,0 +1,9 @@
+{
+	"name": "gob-df-studio",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "9eb052d8-46e8-41f6-90e8-4829e64329a0",
+		"tenantId": "0690cba8-a3a0-4aab-885f-27112ca1cb7e"
+	}
+}

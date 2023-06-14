@@ -2,7 +2,7 @@
 	"name": "DS_ADLS_BINARY",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "Lnk_dlsawgovernance",
+			"referenceName": "Lnk_dlsgovernance",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {

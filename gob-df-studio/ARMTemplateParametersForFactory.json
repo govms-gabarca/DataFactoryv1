@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "gob-df-studio"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://keyvault-gob-access.vault.azure.net/"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_url": {
+			"value": "https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId": {
+			"value": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_tenant": {
+			"value": "0690cba8-a3a0-4aab-885f-27112ca1cb7e"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_aadResourceId": {
+			"value": "https://analysis.windows.net/powerbi/api"
+		},
+		"Lnk_dlsgovernance_properties_typeProperties_url": {
+			"value": "https://gobsapowerbi.dfs.core.windows.net/"
+		}
+	}
+}

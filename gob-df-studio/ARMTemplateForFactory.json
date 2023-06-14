@@ -1,0 +1,487 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nombre de instancia de Data Factory",
+			"defaultValue": "gob-df-studio"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://keyvault-gob-access.vault.azure.net/"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "0690cba8-a3a0-4aab-885f-27112ca1cb7e"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_aadResourceId": {
+			"type": "string",
+			"defaultValue": "https://analysis.windows.net/powerbi/api"
+		},
+		"Lnk_dlsgovernance_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://gobsapowerbi.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ExtraeActividadesDiarias')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Delete",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_ADLS_BINARY",
+								"type": "DatasetReference",
+								"parameters": {
+									"CONTAINER": "powerbigovernance",
+									"DIRECTORY": {
+										"value": "@concat(\n'activityevents/',\n'Year=',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyy'),\n'/Month=',\nformatDateTime(pipeline().parameters.ParamDateStart,'MM'),\n'/Day=',\nformatDateTime(pipeline().parameters.ParamDateStart,'dd'),\n'/'\n)",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "GetActivitiesPowerBI",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Delete",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@concat(\n'https://api.powerbi.com/v1.0/myorg/admin/activityevents?startDateTime=',\n'''',\npipeline().parameters.ParamDateStart,\n'T00:00:00.000Z',\n'''',\n'&endDateTime=',\n'''',\npipeline().parameters.ParamDateStart,\n'T23:59:59.000Z',\n'''')",
+								"type": "Expression"
+							},
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "ServicePrincipal",
+								"userTenant": "0690cba8-a3a0-4aab-885f-27112ca1cb7e",
+								"username": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff",
+								"resource": "https://analysis.windows.net/powerbi/api",
+								"password": {
+									"type": "AzureKeyVaultSecret",
+									"store": {
+										"referenceName": "AzureKeyVault1",
+										"type": "LinkedServiceReference"
+									},
+									"secretName": "secret-appgovernance"
+								}
+							}
+						}
+					},
+					{
+						"name": "Set tokenContinuation",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "GetActivitiesPowerBI",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "tokenContinuation",
+							"value": {
+								"value": "@activity('GetActivitiesPowerBI').output.continuationToken",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Until",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Set tokenContinuation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@empty(variables('tokenContinuation'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ExtraeContinuationToken",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"url": {
+											"value": "@concat('https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin/activityevents?continuationToken=','''',variables('tokenContinuation'),'''')",
+											"type": "Expression"
+										},
+										"method": "GET",
+										"headers": {},
+										"authentication": {
+											"type": "ServicePrincipal",
+											"userTenant": "0690cba8-a3a0-4aab-885f-27112ca1cb7e",
+											"username": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff",
+											"resource": {
+												"value": "https://analysis.windows.net/powerbi/api",
+												"type": "Expression"
+											},
+											"password": {
+												"type": "AzureKeyVaultSecret",
+												"store": {
+													"referenceName": "AzureKeyVault1",
+													"type": "LinkedServiceReference"
+												},
+												"secretName": "secret-appgovernance"
+											}
+										}
+									}
+								},
+								{
+									"name": "Reset tokenContinuation",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ExtraeContinuationToken",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "Copy data1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "tokenContinuation",
+										"value": {
+											"value": "@activity('ExtraeContinuationToken').output.continuationToken",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "GET",
+											"paginationRules": {
+												"supportRFC5988": "true"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_PowerBI_API",
+											"type": "DatasetReference",
+											"parameters": {
+												"Token": {
+													"value": "@variables('tokenContinuation')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_JSON_ADLS",
+											"type": "DatasetReference",
+											"parameters": {
+												"DIRECTORY": {
+													"value": "@concat(\n'activityevents/',\n'Year=',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyy'),\n'/Month=',\nformatDateTime(pipeline().parameters.ParamDateStart,'MM'),\n'/Day=',\nformatDateTime(pipeline().parameters.ParamDateStart,'dd')\n)\n",
+													"type": "Expression"
+												},
+												"FILENAME": {
+													"value": "@concat(\n'activities_',\nformatDateTime(pipeline().parameters.ParamDateStart,'yyyyMMdd'),\nformatDateTime(utcnow(),'dd-MM-yyyy-hhmmss'),\n'.json'\n)",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"ParamDateStart": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"tokenContinuation": {
+						"type": "String"
+					},
+					"FechaInicial": {
+						"type": "String"
+					},
+					"FechaInicialdos": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-06-06T21:02:22Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_BINARY')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]",
+				"[concat(variables('factoryId'), '/datasets/DS_PowerBI_API')]",
+				"[concat(variables('factoryId'), '/datasets/DS_JSON_ADLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_BINARY')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Lnk_dlsgovernance",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"CONTAINER": {
+						"type": "string"
+					},
+					"DIRECTORY": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().DIRECTORY",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().CONTAINER",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Lnk_dlsgovernance')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_JSON_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Lnk_dlsgovernance",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"DIRECTORY": {
+						"type": "string"
+					},
+					"FILENAME": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().FILENAME",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().DIRECTORY",
+							"type": "Expression"
+						},
+						"fileSystem": "powerbigovernance"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Lnk_dlsgovernance')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_PowerBI_API')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Lnk_PowerBI_API",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Token": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@concat(\n'activityevents?continuationToken=',\n'''',\ndataset().Token,\n''''\n)",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Lnk_PowerBI_API')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVault1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Lnk_PowerBI_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('Lnk_PowerBI_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "AadServicePrincipal",
+					"servicePrincipalId": "[parameters('Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVault1",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "secret-appgovernance"
+					},
+					"tenant": "[parameters('Lnk_PowerBI_API_properties_typeProperties_tenant')]",
+					"aadResourceId": "[parameters('Lnk_PowerBI_API_properties_typeProperties_aadResourceId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Lnk_dlsgovernance')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('Lnk_dlsgovernance_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVault1",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "gobsapowerbi"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+			]
+		}
+	]
+}

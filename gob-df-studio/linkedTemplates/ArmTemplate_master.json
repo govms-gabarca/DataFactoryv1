@@ -1,0 +1,84 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nombre de instancia de Data Factory",
+			"defaultValue": "gob-df-studio"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://keyvault-gob-access.vault.azure.net/"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://wabi-south-central-us-redirect.analysis.windows.net/v1.0/myorg/admin"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "0690cba8-a3a0-4aab-885f-27112ca1cb7e"
+		},
+		"Lnk_PowerBI_API_properties_typeProperties_aadResourceId": {
+			"type": "string",
+			"defaultValue": "https://analysis.windows.net/powerbi/api"
+		},
+		"Lnk_dlsgovernance_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://gobsapowerbi.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI de la cuenta de almacenamiento que contiene las plantillas de ARM vinculadas."
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Token de SAS para la cuenta de almacenamiento que contiene las plantillas de ARM vinculadas"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "gob-df-studio_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureKeyVault1_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
+					},
+					"Lnk_PowerBI_API_properties_typeProperties_url": {
+						"value": "[parameters('Lnk_PowerBI_API_properties_typeProperties_url')]"
+					},
+					"Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Lnk_PowerBI_API_properties_typeProperties_servicePrincipalId')]"
+					},
+					"Lnk_PowerBI_API_properties_typeProperties_tenant": {
+						"value": "[parameters('Lnk_PowerBI_API_properties_typeProperties_tenant')]"
+					},
+					"Lnk_PowerBI_API_properties_typeProperties_aadResourceId": {
+						"value": "[parameters('Lnk_PowerBI_API_properties_typeProperties_aadResourceId')]"
+					},
+					"Lnk_dlsgovernance_properties_typeProperties_url": {
+						"value": "[parameters('Lnk_dlsgovernance_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

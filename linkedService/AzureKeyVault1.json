@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "AzureKeyVault",
 		"typeProperties": {
-			"baseUrl": "https://kv-governancepbi.vault.azure.net/"
+			"baseUrl": "https://keyvault-gob-access.vault.azure.net/"
 		}
 	},
 	"type": "Microsoft.DataFactory/factories/linkedservices"

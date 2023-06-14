@@ -7,16 +7,16 @@
 			"url": "https://api.powerbi.com/v1.0/myorg/admin/activityevents",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "AadServicePrincipal",
-			"servicePrincipalId": "acdd70b8-1d65-4e11-b26f-adbb4847427a",
+			"servicePrincipalId": "9fa09001-68eb-4d03-99bd-eabc6c5ef7ff",
 			"servicePrincipalKey": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
 					"referenceName": "AzureKeyVault1",
 					"type": "LinkedServiceReference"
 				},
-				"secretName": "apirest"
+				"secretName": "secret-appgovernance"
 			},
-			"tenant": "5a4c51fd-c59d-493e-8aec-8f6300364946",
+			"tenant": "0690cba8-a3a0-4aab-885f-27112ca1cb7e",
 			"aadResourceId": "https://analysis.windows.net/powerbi/api"
 		}
 	},

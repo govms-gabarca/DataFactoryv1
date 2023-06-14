@@ -26,7 +26,7 @@
 					"value": "@dataset().DIRECTORY",
 					"type": "Expression"
 				},
-				"fileSystem": "powerbigovernance-df"
+				"fileSystem": "powerbigovernance"
 			}
 		},
 		"schema": {}
